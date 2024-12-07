@@ -1,0 +1,55 @@
+openapi: 3.0.0
+info:
+  title: "RP Flask REST API"
+  description: "An API for managing trails and related information"
+  version: "1.0.0"
+
+servers:
+  - url: "/api/v1"
+
+paths:
+  /trails:
+    get:
+      summary: "Get all trails"
+      operationId: trails.read_all_trails
+      responses:
+        "200":
+          description: "A list of trails"
+          content:
+            application/json:
+
+components:
+  schemas:
+    Trail:
+      type: object
+      properties:
+        UserId:
+          type: integer
+        Name:
+          type: string
+        Difficulty:
+          type: string
+        Rating:
+          type: number
+          format: float
+        Length:
+          type: number
+          format: float
+        ElevationGain:
+          type: integer
+        RouteType:
+          type: string
+        CompletionTime:
+          type: integer
+        Description:
+          type: string
+        Points:
+          type: array
+          items:
+            $ref: "#/components/schemas/Point"
+        Tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tag"
+        Location:
+          $ref: "#/components/schemas/Location"
