@@ -20,7 +20,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Trail'
+                  $ref: "#/components/schemas/Trail"
     post:
       summary: "Create a new trail"
       operationId: trails.create_trail
@@ -30,14 +30,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Trail'
+              $ref: "#/components/schemas/Trail"
       responses:
         "201":
           description: "Trail created successfully"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Trail'
+                $ref: "#/components/schemas/Trail"
 
 components:
   schemas:
@@ -61,7 +61,7 @@ components:
         description:
           type: string
         location:
-          $ref: '#/components/schemas/Location'
+          $ref: "#/components/schemas/Location"
     Point:
       type: object
       properties:
@@ -76,7 +76,6 @@ components:
       required:
         - Latitude
         - Longitude
-
     Tag:
       type: object
       properties:
@@ -84,37 +83,3 @@ components:
           type: string
       required:
         - Name
-
-    Trail:
-      type: object
-      properties:
-        UserId:
-          type: integer
-        Name:
-          type: string
-        Difficulty:
-          type: string
-        Rating:
-          type: number
-          format: float
-        Length:
-          type: number
-          format: float
-        ElevationGain:
-          type: integer
-        RouteType:
-          type: string
-        CompletionTime:
-          type: integer
-        Description:
-          type: string
-        Points:
-          type: array
-          items:
-            $ref: "#/components/schemas/Point"
-        Tags:
-          type: array
-          items:
-            $ref: "#/components/schemas/Tag"
-        Location:
-          $ref: "#/components/schemas/Location"
