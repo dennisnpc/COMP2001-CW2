@@ -38,6 +38,44 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Trail"
+    put:
+      summary: "Update a trail by name"
+      operationId: trails.update_trail
+      parameters:
+        - in: "path"
+          name: "trail_name"
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                Credentials:
+                  type: object
+                  properties:
+                    Email:
+                      type: string
+                    Password:
+                      type: string
+                  required:
+                    - Email
+                    - Password
+                Trail:
+                  $ref: "#/components/schemas/TrailUpdate"
+              required:
+                - Credentials
+                - Trail
+      responses:
+        "200":
+          description: "Trail updated successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trail"
 
 components:
   schemas:
