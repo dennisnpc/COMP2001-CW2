@@ -108,3 +108,27 @@ def update_trail(trail_name):
         abort(404, f"Trail with name '{trail_name}' not found.")
 
 # To delete (DELETE) a Trail
+@requires_authentication
+def delete_trail(trail_name):
+    user = g.current_user
+    existing_trail = Trail.query.filter(Trail.Name == trail_name).one_or_none()
+
+    # Check user owns the Trail
+    if existing_trail:
+        if existing_trail.UserId != user.UserId:
+            abort(403, "You do not have permission to delete this trail.")
+
+        try:
+            # Delete associated Points and Tags first from link tables
+            TrailPoint.query.filter_by(TrailId=existing_trail.TrailId).delete()
+            TrailTag.query.filter_by(TrailId=existing_trail.TrailId).delete()
+            
+            # Delete Trail
+            db.session.delete(existing_trail)
+            db.session.commit()
+            return make_response(f"Trail with name '{trail_name}' deleted", 204)
+        except Exception as e:
+            db.session.rollback()
+            abort(400, f"Could not delete trail: {str(e)}")
+    else:
+        abort(404, f"Trail with name '{trail_name}' not found.")
