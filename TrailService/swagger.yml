@@ -25,6 +25,56 @@ paths:
       summary: "Create a new trail"
       operationId: trails.create_trail
       requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                Credentials:
+                  type: object
+                  properties:
+                    Email:
+                      type: string
+                    Password:
+                      type: string
+                  required:
+                    - Email
+                    - Password
+                Trail:
+                  $ref: "#/components/schemas/Trail"
+              required:
+                - Credentials
+                - Trail
+      responses:
+        "201":
+          description: "Trail created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trail"
+
+  /trails/{trail_name}:
+    get:
+      summary: "Get a trail by name"
+      operationId: trails.read_trail_by_name
+      parameters:
+        - in: "path"
+          name: "trail_name"
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "A trail"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trail"
+    post:
+      summary: "Create a new trail"
+      operationId: trails.create_trail
+      requestBody:
         description: "Trail object that needs to be added"
         required: true
         content:

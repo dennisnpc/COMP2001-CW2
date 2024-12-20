@@ -14,6 +14,12 @@ def read_all_trails():
     trails = Trail.query.all()
     return trails_schema.dump(trails)
 
+def read_trail_by_name(trail_name):
+    trail = Trail.query.filter(Trail.Name == trail_name).one_or_none()
+    if trail is None:
+        abort(404, f"Trail with name '{trail_name}' not found.")
+    return trail_schema.dump(trail)
+
 # To create (POST) a Trail
 def create_trail():
     request_json = request.get_json()
