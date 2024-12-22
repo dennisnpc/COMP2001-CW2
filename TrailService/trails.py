@@ -7,13 +7,52 @@ from models import (
     location_schema, point_schema, tag_schema
 )
 from auth import requires_authentication
+from math import ceil
 
 # Trail CRUD operations
 # To read (GET) all Trails
 def read_all_trails():
-    trails = Trail.query.all()
-    return trails_schema.dump(trails)
+    # Get pagination parameters from query string
+    page = request.args.get('page', default=1, type=int)
+    per_page = request.args.get('per_page', default=10, type=int)
 
+    # Define the maximum number of trails per page
+    MAX_PER_PAGE = 100
+
+    if page < 1 or per_page < 1:
+        abort(400, "Page and per_page must be positive integers.")
+
+    # Enforce the maximum number of trails per page
+    if per_page > MAX_PER_PAGE:
+        per_page = MAX_PER_PAGE
+
+    total_trails = Trail.query.count()
+
+    total_pages = ceil(total_trails / per_page)
+
+    # Get the Trails for the requested page
+    trails = (
+        Trail.query
+        .order_by(Trail.TrailId)
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+        .all()
+    )
+
+    result = trails_schema.dump(trails)
+
+    # Include pagination info
+    response = {
+        'TotalTrails': total_trails,
+        'TotalPages': total_pages,
+        'CurrentPage': page,
+        'PerPage': per_page,
+        'Trails': result
+    }
+
+    return jsonify(response)
+
+# To read (GET) a Trail by name
 def read_trail_by_name(trail_name):
     trail = Trail.query.filter(Trail.Name == trail_name).one_or_none()
     if trail is None:
@@ -21,13 +60,71 @@ def read_trail_by_name(trail_name):
     return trail_schema.dump(trail)
 
 # To create (POST) a Trail
+@requires_authentication
 def create_trail():
     request_json = request.get_json()
+
+    if not request_json:
+        abort(400, "Invalid JSON.")
+
+    # Extract and remove Credentials
+    request_json.pop("Credentials", None)
+
+    # Extract the Trail object
     trail_data = request_json.get("Trail")
-    new_trail = Trail(**trail_data)
+    if not trail_data:
+        abort(400, "Trail data is required.")
+
+    user = g.current_user
+
+    location_data = trail_data.pop('Location', None)
+    if not location_data:
+        abort(400, "Location data is required.")
+
+    # Create the Location
+    location = Location(**location_data)
+    db.session.add(location)
+    db.session.flush()
+
+    # Create the Trail
+    trail_fields = {
+        key: trail_data[key] for key in [
+            'Name', 'Difficulty', 'Rating', 'Length', 'ElevationGain',
+            'RouteType', 'CompletionTime', 'Description'
+        ] if key in trail_data
+    }
+    new_trail = Trail(**trail_fields)
+    new_trail.UserId = user.UserId
+    new_trail.LocationId = location.LocationId
     db.session.add(new_trail)
+    db.session.flush()
+
+    points_data = trail_data.get('Points', [])
+    if len(points_data) < 1:
+        abort(400, "At least one point is required.")
+
+    for sequence_number, point_data in enumerate(points_data, start=1):
+        point = Point(**point_data)
+        db.session.add(point)
+        db.session.flush()
+        trail_point = TrailPoint(
+            TrailId = new_trail.TrailId,
+            PointId = point.PointId,
+            SequenceNumber = sequence_number # Automatically assign sequence number
+        )
+        db.session.add(trail_point)
+
+    # Create Tags and TrailTags
+    tags_data = trail_data.get('Tags', [])
+    for tag_data in tags_data:
+        tag = Tag(**tag_data)
+        db.session.add(tag)
+        db.session.flush()
+        trail_tag = TrailTag(TrailId=new_trail.TrailId, TagId=tag.TagId)
+        db.session.add(trail_tag)
+
     db.session.commit()
-    return trails_schema.dump(new_trail)
+    return trail_schema.dump(new_trail), 201
 
 # To update (PUT) a Trail by name
 @requires_authentication
