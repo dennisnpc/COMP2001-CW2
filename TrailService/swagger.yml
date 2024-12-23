@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: "RP Flask REST API"
+  title: "TrailService REST API"
   description: "An API for managing trails and related information"
   version: "1.0.0"
 
@@ -10,17 +10,58 @@ servers:
 paths:
   /trails:
     get:
-      summary: "Get all trails"
+      summary: "Get all trails with pagination and sorting"
       operationId: trails.read_all_trails
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          description: "Page number"
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+          description: "Number of trails per page (maximum 100)"
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+          description: "Field to sort by"
+        - in: query
+          name: sort_order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: "asc"
+          description: "Sort order"
       responses:
         "200":
-          description: "A list of trails"
+          description: "A paginated and sorted list of trails"
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Trail"
+                type: object
+                properties:
+                  TotalTrails:
+                    type: integer
+                  TotalPages:
+                    type: integer
+                  CurrentPage:
+                    type: integer
+                  PerPage:
+                    type: integer
+                  Trails:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Trail"
+        "400":
+          description: "Invalid pagination or sorting parameters"
     post:
       summary: "Create a new trail"
       operationId: trails.create_trail
@@ -48,11 +89,16 @@ paths:
                 - Trail
       responses:
         "201":
-          description: "Trail created"
+          description: "Trail created successfully"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Trail"
+        "400":
+          description: "Invalid input data"
+        "403":
+          description: "Forbidden - You do not have permission to create this trail"
+
   /trails/{trail_name}:
     get:
       summary: "Get a trail by name"
