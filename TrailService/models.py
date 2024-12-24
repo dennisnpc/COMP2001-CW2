@@ -19,10 +19,11 @@ class Location(db.Model):
     __table_args__ = {'schema': SCHEMA}
     LocationId = db.Column(db.Integer, primary_key=True, autoincrement=True)
     City = db.Column(db.String(40))
+    County = db.Column(db.String(40), nullable=False)
     Country = db.Column(db.String(40), nullable=False)
 
     # Relationship to Trail
-    trails = db.relationship('Trail', back_populates='location', cascade='all, delete-orphan')
+    trails = db.relationship('Trail', back_populates='location')
 
 # Point model
 class Point(db.Model):
@@ -34,7 +35,7 @@ class Point(db.Model):
     Description = db.Column(db.String(2000))
 
     # Relationship to Trail
-    trails = db.relationship('Trail', secondary=f'{SCHEMA}.TrailPoint', back_populates='points', cascade='all, delete-orphan')
+    trails = db.relationship('Trail', secondary=f'{SCHEMA}.TrailPoint', back_populates='points')
 
 # Tag model
 class Tag(db.Model):
